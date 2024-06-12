@@ -91,7 +91,8 @@ ROOT_URLCONF = 'ycjc.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'articles', 'templates', 'articles')],
+        'DIRS': [os.path.join(BASE_DIR, 'articles', 'templates', 'articles'),
+                os.path.join(BASE_DIR, 'frontend', 'templates'),],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
