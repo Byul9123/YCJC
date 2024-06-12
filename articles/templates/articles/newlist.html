@@ -70,7 +70,7 @@
 <body>
     <h1>게시글 작성</h1>
     
-    <form id="article-form" method="post">
+    <form id="article-form" method="post" action="{% url 'articles:newlist' %}">
         {% csrf_token %}
         <label for="title">제목:</label>
         <input type="text" id="title" name="title" required>
@@ -89,35 +89,82 @@
     <a href="#" onclick="history.back()">게시글 목록으로 돌아가기</a>
 
     <script>
-        document.getElementById("article-form").addEventListener("submit", function(event) {
-            event.preventDefault(); // 폼 제출 동작 막기
-
-            // 선택된 카테고리 값을 가져오기
-            var categorySelect = document.getElementById("category");
-            var category = categorySelect.options[categorySelect.selectedIndex].value;
-
-            // 폼 데이터 생성
-            var formData = new FormData(this);
-            formData.append("category", category); // 카테고리 값을 폼 데이터에 추가
-
-            // 선택된 카테고리에 따라 URL 변경
-            var actionUrl = `http://127.0.0.1:8000/api/articles/${category}/`;
-
-            var csrftoken = getCookie('csrftoken'); // CSRF 토큰 가져오기
-            var access_token = localStorage.getItem('access_token'); // JWT 액세스 토큰 가져오기
-            
-            // 폼 데이터를 서버로 전송
-            fetch(actionUrl, {
+        async function refreshToken() {
+            const refreshToken = localStorage.getItem('refresh_token');
+            const response = await fetch('http://127.0.0.1:8000/api/token/refresh/', {
                 method: 'POST',
                 headers: {
-                    'X-CSRFToken': csrftoken,
-                    'Authorization': 'Bearer ' + access_token,
+                    'Content-Type': 'application/json'
                 },
-                body: formData,
-            }).then(response => {
-                // 서버로부터 응답을 받으면 페이지 이동
-                if (response.ok) {
-                    // 선택된 카테고리 값에 따라 해당하는 리스트 페이지로 이동
+                body: JSON.stringify({ refresh: refreshToken })
+            });
+            if (response.ok) {
+                const data = await response.json();
+                localStorage.setItem('access_token', data.access);
+                return data.access;
+            } else {
+                const errorData = await response.json();
+                console.error('Failed to refresh token:', errorData);
+                throw new Error('Failed to refresh token');
+            }
+        }
+
+        async function submitForm(event) {
+            event.preventDefault();
+
+            const form = event.target;
+            const formData = new FormData(form);
+
+            const category = formData.get('category');
+            const actionUrl = `http://127.0.0.1:8000/api/articles/${category}/`;
+
+            const csrftoken = getCookie('csrftoken');
+            let accessToken = localStorage.getItem('access_token');
+
+            try {
+                const response = await fetch(actionUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrftoken,
+                        'Authorization': 'Bearer ' + accessToken,
+                    },
+                    body: formData,
+                });
+
+                if (response.status === 401) {
+                    // 토큰이 만료된 경우, 토큰을 갱신하고 다시 시도합니다.
+                    accessToken = await refreshToken();
+                    const retryResponse = await fetch(actionUrl, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrftoken,
+                            'Authorization': 'Bearer ' + accessToken,
+                        },
+                        body: formData,
+                    });
+
+                    if (retryResponse.ok) {
+                        const category = formData.get('category');
+                        switch (category) {
+                            case "Travel":
+                                window.location.href = "{% url 'articles:Travel_list' %}";
+                                break;
+                            case "Leisure":
+                                window.location.href = "{% url 'articles:Leisure_list' %}";
+                                break;
+                            case "Cooking":
+                                window.location.href = "{% url 'articles:Cooking_list' %}";
+                                break;
+                            case "Camping":
+                                window.location.href = "{% url 'articles:Camping_list' %}";
+                                break;
+                        }
+                    } else {
+                        const errorData = await retryResponse.json();
+                        console.error('오류 발생:', errorData);
+                    }
+                } else if (response.ok) {
+                    const category = formData.get('category');
                     switch (category) {
                         case "Travel":
                             window.location.href = "{% url 'articles:Travel_list' %}";
@@ -131,31 +178,26 @@
                         case "Camping":
                             window.location.href = "{% url 'articles:Camping_list' %}";
                             break;
-                        default:
-                            console.error("잘못된 카테고리입니다.");
-                            break;
                     }
                 } else {
-                    // 응답이 오류인 경우 에러 메시지 출력
-                    response.json().then(data => {
-                        console.error('오류 발생:', data);
-                    });
+                    const errorData = await response.json();
+                    console.error('오류 발생:', errorData);
                 }
-            }).catch(error => {
+            } catch (error) {
                 console.error('네트워크 오류:', error);
-            });
-        });
+            }
+        }
+
+        document.getElementById("article-form").addEventListener("submit", submitForm);
 
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {
                 const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
+                for (let i = 0; cookies.length > i; i++) {
                     const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    if (cookie.substring(0, name.length + 1) === (name + '='))
                         cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
                 }
             }
             return cookieValue;

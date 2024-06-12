@@ -1,25 +1,34 @@
-document.getElementById('logout-button').addEventListener('click', async function() {
-    try {
-        // 로컬 스토리지에서 refresh token을 가져오기
-        const refreshToken = localStorage.getItem('refresh_token');
-        
-        // 로그아웃 요청
-        await axios.post('/api/users/logout/', {
-            refresh: refreshToken
-        }, {
-            headers: {
-                'Content-Type': 'application/json'
+function logout() {
+    fetch('/frontend/users/logout/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')  // CSRF 토큰 포함
+        }
+    }).then(response => {
+        if (response.ok) {
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
+            window.location.href = '/';
+        } else {
+            console.error('Logout failed');
+        }
+    });
+}
+
+document.getElementById('logout-button').addEventListener('click', logout);
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
             }
-        });
-
-        // 로컬 스토리지에서 토큰 제거
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-
-        // 로그인 페이지로 리디렉션
-        window.location.href = '/users/login/';
-    } catch (error) {
-        console.error('Logout error:', error);
-        alert('로그아웃 실패: ' + JSON.stringify(error.response.data));
+        }
     }
-});
+    return cookieValue;
+}

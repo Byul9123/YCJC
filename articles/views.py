@@ -8,7 +8,8 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from .serializers import (
     CommentSerializer,ArticleSerializer,
 )
-from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 
 class BaseListView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
@@ -92,7 +93,8 @@ class TravelDetail(generics.RetrieveUpdateDestroyAPIView):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class CampingList(BaseListView):
+
+class CampingList(generics.ListCreateAPIView):
     queryset = Article.objects.filter(category='Camping')
     serializer_class = ArticleSerializer
 
@@ -114,7 +116,7 @@ class CampingList(BaseListView):
             new_article_id = serializer.data.get('id')
             return redirect('articles:Camping_detail', pk=new_article_id)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
     @classmethod
     def get_new_post_page(cls, request):
         return render(request, 'newlist.html')

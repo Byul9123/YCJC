@@ -83,6 +83,7 @@
             <li class="left-justified"><a href="{% url 'frontend:index' %}" style="color: #fff;">여차저차</a></li>
             {% if user.is_authenticated %}
                 <li class="right-justified"><a href="{% url 'frontend:logout' %}">로그아웃</a></li>
+                <li class="right-justified"><a href="{% url 'frontend:user_detail' user.username %}">회원정보</a></li>
             {% else %}
                 <li class="right-justified"><a href="{% url 'frontend:login' %}?next={{ request.path }}">로그인</a></li>
                 <li class="right-justified"><a href="{% url 'frontend:signup' %}?next={{ request.path }}">회원가입</a></li>
