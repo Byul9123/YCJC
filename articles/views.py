@@ -1,3 +1,4 @@
+from django.views import View
 from rest_framework import generics, status
 from django.shortcuts import get_object_or_404, render, redirect
 from rest_framework.response import Response
@@ -8,8 +9,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from .serializers import (
     CommentSerializer,ArticleSerializer,
 )
-from django.contrib.auth.decorators import login_required
-from django.utils.decorators import method_decorator
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 class BaseListView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
@@ -29,33 +29,26 @@ class BaseDetailView(generics.RetrieveUpdateDestroyAPIView):
     def perform_update(self, serializer):
         serializer.save(author=self.request.user)
 
-class TravelList(BaseListView):
-    queryset = Article.objects.filter(category='Travel')
-    serializer_class = ArticleSerializer
-
-    def get_permissions(self):
-        if self.request.method == 'POST':
-            self.permission_classes = [IsAuthenticated]
-        else:
-            self.permission_classes = [AllowAny]
-        return super().get_permissions()
-
+class TravelList(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         articles = Article.objects.filter(category='Travel')
-        serializer = ArticleSerializer(articles, many=True)
-        return render(request, 'Travel.html', {'articles': serializer.data})
+        return render(request, 'Travel.html', {'articles': articles, 'user': request.user})
+
+class TravelList(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        articles = Article.objects.filter(category='Travel')
+        return render(request, 'Travel.html', {'articles': articles, 'user': request.user})
 
     def post(self, request, *args, **kwargs):
-        serializer = ArticleSerializer(data=request.data)
+        serializer = ArticleSerializer(data=request.POST)
         if serializer.is_valid():
             serializer.save(author=request.user)
             new_article_id = serializer.data.get('id')
             return redirect('articles:Travel_detail', pk=new_article_id)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    @classmethod
-    def get_new_post_page(cls, request):
-        return render(request, 'newlist.html')
+        return render(request, 'newlist.html', {'form': serializer, 'errors': serializer.errors})
+
+def get_new_post_page(request):
+    return render(request, 'newlist.html', {'user': request.user if request.user.is_authenticated else None})
 
 class TravelDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Article.objects.filter(category='Travel')
@@ -94,32 +87,26 @@ class TravelDetail(generics.RetrieveUpdateDestroyAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class CampingList(generics.ListCreateAPIView):
-    queryset = Article.objects.filter(category='Camping')
-    serializer_class = ArticleSerializer
-
-    def get_permissions(self):
-        if self.request.method == 'POST':
-            self.permission_classes = [IsAuthenticated]
-        else:
-            self.permission_classes = [AllowAny]
-        return super().get_permissions()
-
+class CampingList(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         articles = Article.objects.filter(category='Camping')
-        return render(request, 'Camping.html', {'articles': articles})
+        return render(request, 'Camping.html', {'articles': articles, 'user': request.user})
+
+class CampingList(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        articles = Article.objects.filter(category='Camping')
+        return render(request, 'Camping.html', {'articles': articles, 'user': request.user})
 
     def post(self, request, *args, **kwargs):
-        serializer = ArticleSerializer(data=request.data)
+        serializer = ArticleSerializer(data=request.POST)
         if serializer.is_valid():
             serializer.save(author=request.user)
             new_article_id = serializer.data.get('id')
             return redirect('articles:Camping_detail', pk=new_article_id)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return render(request, 'newlist.html', {'form': serializer, 'errors': serializer.errors})
 
-    @classmethod
-    def get_new_post_page(cls, request):
-        return render(request, 'newlist.html')
+def get_new_post_page(request):
+    return render(request, 'newlist.html', {'user': request.user if request.user.is_authenticated else None})
 
 class CampingDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Article.objects.filter(category='Camping')
@@ -157,33 +144,26 @@ class CampingDetail(generics.RetrieveUpdateDestroyAPIView):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class LeisureList(BaseListView):
-    queryset = Article.objects.filter(category='Leisure')
-    serializer_class = ArticleSerializer
-
-    def get_permissions(self):
-        if self.request.method == 'POST':
-            self.permission_classes = [IsAuthenticated]
-        else:
-            self.permission_classes = [AllowAny]
-        return super().get_permissions()
-
+class LeisureList(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         articles = Article.objects.filter(category='Leisure')
-        serializer = ArticleSerializer(articles, many=True)
-        return render(request, 'Leisure.html', {'articles': serializer.data})
+        return render(request, 'Leisure.html', {'articles': articles, 'user': request.user})
+
+class LeisureList(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        articles = Article.objects.filter(category='Leisure')
+        return render(request, 'Leisure.html', {'articles': articles, 'user': request.user})
 
     def post(self, request, *args, **kwargs):
-        serializer = ArticleSerializer(data=request.data)
+        serializer = ArticleSerializer(data=request.POST)
         if serializer.is_valid():
             serializer.save(author=request.user)
             new_article_id = serializer.data.get('id')
             return redirect('articles:Leisure_detail', pk=new_article_id)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    @classmethod
-    def get_new_post_page(cls, request):
-        return render(request, 'newlist.html')
+        return render(request, 'newlist.html', {'form': serializer, 'errors': serializer.errors})
+
+def get_new_post_page(request):
+    return render(request, 'newlist.html', {'user': request.user if request.user.is_authenticated else None})
 
 class LeisureDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Article.objects.filter(category='Leisure')
@@ -221,33 +201,26 @@ class LeisureDetail(generics.RetrieveUpdateDestroyAPIView):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class CookingList(BaseListView):
-    queryset = Article.objects.filter(category='Cooking')
-    serializer_class = ArticleSerializer
-
-    def get_permissions(self):
-        if self.request.method == 'POST':
-            self.permission_classes = [IsAuthenticated]
-        else:
-            self.permission_classes = [AllowAny]
-        return super().get_permissions()
-
+class CookingList(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         articles = Article.objects.filter(category='Cooking')
-        serializer = ArticleSerializer(articles, many=True)
-        return render(request, 'Cooking.html', {'articles': serializer.data})
+        return render(request, 'Cooking.html', {'articles': articles, 'user': request.user})
+
+class CookingList(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        articles = Article.objects.filter(category='Cooking')
+        return render(request, 'Cooking.html', {'articles': articles, 'user': request.user})
 
     def post(self, request, *args, **kwargs):
-        serializer = ArticleSerializer(data=request.data)
+        serializer = ArticleSerializer(data=request.POST)
         if serializer.is_valid():
             serializer.save(author=request.user)
             new_article_id = serializer.data.get('id')
             return redirect('articles:Cooking_detail', pk=new_article_id)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    @classmethod
-    def get_new_post_page(cls, request):
-        return render(request, 'newlist.html')
+        return render(request, 'newlist.html', {'form': serializer, 'errors': serializer.errors})
+
+def get_new_post_page(request):
+    return render(request, 'newlist.html', {'user': request.user if request.user.is_authenticated else None})
 
 class CookingDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Article.objects.filter(category='Cooking')
