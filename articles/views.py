@@ -30,11 +30,8 @@ class BaseDetailView(generics.RetrieveUpdateDestroyAPIView):
         serializer.save(author=self.request.user)
 
 class TravelList(LoginRequiredMixin, View):
-    def get(self, request, *args, **kwargs):
-        articles = Article.objects.filter(category='Travel')
-        return render(request, 'Travel.html', {'articles': articles, 'user': request.user})
+    login_url = '/users/login/'  # 로그인 페이지의 URL
 
-class TravelList(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         articles = Article.objects.filter(category='Travel')
         return render(request, 'Travel.html', {'articles': articles, 'user': request.user})
@@ -88,11 +85,8 @@ class TravelDetail(generics.RetrieveUpdateDestroyAPIView):
 
 
 class CampingList(LoginRequiredMixin, View):
-    def get(self, request, *args, **kwargs):
-        articles = Article.objects.filter(category='Camping')
-        return render(request, 'Camping.html', {'articles': articles, 'user': request.user})
+    login_url = '/users/login/'  # 로그인 페이지의 URL
 
-class CampingList(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         articles = Article.objects.filter(category='Camping')
         return render(request, 'Camping.html', {'articles': articles, 'user': request.user})
@@ -145,11 +139,8 @@ class CampingDetail(generics.RetrieveUpdateDestroyAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class LeisureList(LoginRequiredMixin, View):
-    def get(self, request, *args, **kwargs):
-        articles = Article.objects.filter(category='Leisure')
-        return render(request, 'Leisure.html', {'articles': articles, 'user': request.user})
+    login_url = '/users/login/'  # 로그인 페이지의 URL
 
-class LeisureList(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         articles = Article.objects.filter(category='Leisure')
         return render(request, 'Leisure.html', {'articles': articles, 'user': request.user})
@@ -202,11 +193,8 @@ class LeisureDetail(generics.RetrieveUpdateDestroyAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class CookingList(LoginRequiredMixin, View):
-    def get(self, request, *args, **kwargs):
-        articles = Article.objects.filter(category='Cooking')
-        return render(request, 'Cooking.html', {'articles': articles, 'user': request.user})
+    login_url = '/users/login/'  # 로그인 페이지의 URL
 
-class CookingList(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         articles = Article.objects.filter(category='Cooking')
         return render(request, 'Cooking.html', {'articles': articles, 'user': request.user})
@@ -218,6 +206,9 @@ class CookingList(LoginRequiredMixin, View):
             new_article_id = serializer.data.get('id')
             return redirect('articles:Cooking_detail', pk=new_article_id)
         return render(request, 'newlist.html', {'form': serializer, 'errors': serializer.errors})
+
+def get_new_post_page(request):
+    return render(request, 'newlist.html', {'user': request.user if request.user.is_authenticated else None})
 
 def get_new_post_page(request):
     return render(request, 'newlist.html', {'user': request.user if request.user.is_authenticated else None})

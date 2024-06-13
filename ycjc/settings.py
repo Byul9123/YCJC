@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
+SECRET_KEY = 'django-insecure-4+99yz^bz5=+qcv+(bn4!h+&kku=7^(@l=37yr_#$j_h^6c_hv'
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -116,12 +116,8 @@ WSGI_APPLICATION = 'ycjc.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': os.environ.get("DB_ENGINE"),
-        'NAME': os.environ.get("DB_NAME"),
-        'USER': os.environ.get("DB_USER"),
-        'PASSWORD': os.environ.get("DB_PASSWORD"),
-        'HOST': os.environ.get("DB_HOST"),
-        'PORT': os.environ.get("DB_PORT"),
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
 
